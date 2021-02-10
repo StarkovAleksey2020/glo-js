@@ -1,143 +1,41 @@
 'use strict';
-// ~~~~~~~~~~~~~~~~~~~~~~~ LESSON 08 ~~~~~~~~~~~~~~~~~~~~~~~
-//
-// Константы
-const markHigh = "У вас высокий уровень дохода";
-const markAverage = "У вас средний уровень дохода";
-const markLow = "К сожалению у вас уровень дохода ниже среднего";
-const markNegative = "Цель не будет достигнута";
-const errorMessage = "Что то пошло не так";
+// Восстановить порядок книг
+const books = document.querySelector('.books'),
+book = document.querySelectorAll('.book');
+book[0].before(book[1]);
+book[0].after(book[4]);
+book[4].after(book[3]);
+book[3].after(book[5]);
 
-let isNumber = function (n) {
-  return !isNaN(parseFloat(n)) && isFinite(n) && n > 0;
-};
+// Заменить картинку заднего фона на другую из папки image
+const bodyElement = document.querySelector('body');
+bodyElement.style.backgroundImage = 'url(image/you-dont-know-js.jpg)';
 
-// Месячный доход
-let money,
-  start = function () {
-  do {
-    money = prompt('Ваш месячный доход?');
-  } while (!isNumber(money));
-  console.log('Доход в месяц: ', money);
-};
-start();
+// Исправить заголовок в книге 3( Получится - "Книга 3. this и Прототипы Объектов")
+book[4].querySelectorAll('h2 > a')[0].text = 'Книга 3. this и Прототипы Объектов';
 
-let appData = {
-  budget: money,
-  income: {},
-  addIncome: [],
-  expenses: {},
-  addExpenses: [],
-  deposit: false,
-  percentDeposit: 0,
-  moneyDeposit: 0,
-  mission: 50000,
-  period: 3,
-  budgetDay: 0,
-  budgetMonth: 0,
-  expensesMonth: 0,
-  asking: () => {
-    if (confirm('Имеется ли у вас дополнительный источник дохода?')) {
-      let itemIncome, cashIncome;
-      do {
-        itemIncome = prompt('Уточните источник дополнительного дохода?', 'Фриланс');
-      } while (!isNaN(Number(itemIncome)));
+// Удалить рекламу со страницы
+let advElement = document.querySelector('.adv');
+advElement.remove();
 
-      do {
-        cashIncome = prompt('Сумма дополнительного заработка в месяц?', 10000);
-      } while (!isNumber(cashIncome));
+// Восстановить порядок глав во второй и пятой книге (внимательно инспектируйте индексы элементов, поможет dev tools)
+const bookTwoChapters = book[0].querySelectorAll('li');
+bookTwoChapters[3].after(bookTwoChapters[6]);
+bookTwoChapters[6].after(bookTwoChapters[8]);
+bookTwoChapters[9].after(bookTwoChapters[2]);
 
-      appData.income[itemIncome] = cashIncome;
-    }
+const bookFiveChapters = book[5].querySelectorAll('li');
+bookFiveChapters[1].after(bookFiveChapters[9]);
+bookFiveChapters[9].after(bookFiveChapters[3]);
+bookFiveChapters[3].after(bookFiveChapters[4]);
+bookFiveChapters[2].after(bookFiveChapters[6]);
+bookFiveChapters[6].after(bookFiveChapters[7]);
 
-    appData.addExpenses = prompt('Перечислите возможные расходы через запятую');
+// в шестой книге добавить главу “Глава 8: За пределами ES6” и поставить её в правильное место
+const bookSixUl = book[2].querySelector('ul');
+let chapterLast = document.createElement('li');
+chapterLast.innerHTML = 'Глава 8: За пределами ES6';
+bookSixUl.append(chapterLast);
 
-    appData.addExpenses = appData.addExpenses.toLowerCase().split(',');
-
-    appData.deposit = confirm('Имеется ли у вас депозит в банке?');
-
-
-    for (let index = 0; index < 2; index++) {
-      let currentExpensesName = "";
-      let currentExpensesValue = 0;
-      do {
-        currentExpensesName = prompt(`Введите обязательную статью расходов № ${index + 1}?`);
-      } while (currentExpensesName.length === 0);
-      do {
-        currentExpensesValue = +prompt(`Во сколько обойдутся расходы по статье "${currentExpensesName}"?`);
-      } while (!isNumber(currentExpensesValue));
-      appData.expenses[currentExpensesName] = currentExpensesValue;
-    }
-    return appData.expenses;
-  },
-  getExpensesMonth: function () { 
-    for (const key in appData.expenses) {
-      appData.expensesMonth += appData.expenses[key];
-    }
-    return appData.expensesMonth;
-  },
-  getBudget: function() {
-    appData.budgetMonth = appData.budget - appData.expensesMonth;
-    appData.budgetDay = appData.budgetMonth / 30;
-  },
-  getTargetMonth: function() {
-    appData.period = Math.ceil(appData.mission / appData.budgetMonth);
-  },
-  getStatusIncome: function() {
-    switch (true) {
-    case (appData.budgetDay >= 1200):
-      alert(markHigh);
-      break;
-    case (appData.budgetDay >= 600 && appData.budgetDay < 1200):
-      alert(markAverage);
-      break;
-  case (appData.budgetDay >= 0 && appData.budgetDay < 600):
-      alert(markLow);
-      break;
-  case (appData.budgetDay < 0):
-      alert(markNegative);
-      break;
-    default:
-      alert(errorMessage);
-      break;
-    }
-  },
-  getInfoDeposit: function () {  
-    if (appData.deposit) {
-      do {
-        appData.percentDeposit = prompt('Уточните ставку по депозиту?', '10');
-      } while (appData.percentDeposit.length === 0);
-      do {
-      appData.moneyDeposit = prompt('Уточните сумму вклада?', 10000);
-      } while (!isNumber(appData.moneyDeposit));
-      
-    }
-  },
-  calcSavedMoney: function () {  
-    return appData.budgetMonth * appData.period;
-  },
-  capitalizeAddExpensesString: function () {
-    for (let index = 0; index < appData.addExpenses.length; index++) {
-      appData.addExpenses[index] = appData.addExpenses[index].substring(0, 1).toUpperCase() + appData.addExpenses[index].slice(1).toLowerCase();
-    }
-  }
-};
-
-appData.asking();
-
-console.log('Расходы с расшифровкой статей: ', appData.expenses);
-console.log('Сумма расходов: ', appData.getExpensesMonth());
-appData.getBudget();
-appData.getTargetMonth();
-console.log('Cрок достижения цели в месяцах:', appData.period);
-console.log('Бюджет на день: ', appData.budgetDay);
-appData.getStatusIncome();
-
-console.log("Наша программа включает в себя данные:");
-for (const key in appData) {
-  console.log("Ключ: " + key + "; Значение: " + appData[key]);
-}
-
-appData.capitalizeAddExpensesString();
-
-console.log('appData.addExpenses - formatted: ', appData.addExpenses.join(', '));
+const bookSixChapters = book[2].querySelectorAll('li');
+bookSixChapters[8].after(bookSixChapters[10]);
