@@ -24,7 +24,9 @@ btnPlus = document.getElementsByTagName('button'),
     additionalExpensesItem = document.querySelector('.additional_expenses-item'),    
     targetAmount = document.querySelector('.target-amount'),
     incomeItem = document.querySelectorAll('.income-items'),
-    periodAmount = document.querySelector('.period-amount');
+    periodAmount = document.querySelector('.period-amount'),
+    nameFields = document.querySelectorAll('[placeholder="Наименование"]'),
+    sumFields = document.querySelectorAll('[placeholder="Сумма"]');
     
 const markHigh = "У вас высокий уровень дохода";
 const markAverage = "У вас средний уровень дохода";
@@ -58,6 +60,7 @@ let appData = {
   expensesMonth: 0,
   start: function () {
     if (parseInt(salaryAmount.value) > 0) {
+      appData.budget = 0;
       appData.budget = +salaryAmount.value;
       appData.getExpenses();
       appData.getIncome();
@@ -80,16 +83,28 @@ let appData = {
   },
   addExpensesBlock: function () {  
     let cloneExpensesItem = expensesItems[0].cloneNode(true);
+    cloneExpensesItem.firstChild.nextSibling.value = '';
+    cloneExpensesItem.lastChild.previousSibling.value = '';
     expensesItems[0].parentNode.insertBefore(cloneExpensesItem, expensesPlus);
     expensesItems = document.querySelectorAll('.expenses-items');
+    nameFields = document.querySelectorAll('[placeholder="Наименование"]');
+    sumFields = document.querySelectorAll('[placeholder="Сумма"]');
+    appData.setListenerName(nameFields);
+    appData.setListenerSum(sumFields);
     if (expensesItems.length === 3) {
       expensesPlus.style.display = 'none';
     }
   },
   addIncomeBlock: function () {  
     let cloneIncomeItem = incomeItems[0].cloneNode(true);
+    cloneIncomeItem.firstChild.nextSibling.value = '';
+    cloneIncomeItem.lastChild.previousSibling.value = '';
     incomeItems[0].parentNode.insertBefore(cloneIncomeItem, incomePlus);
     incomeItems = document.querySelectorAll('.income-items');
+    nameFields = document.querySelectorAll('[placeholder="Наименование"]');
+    sumFields = document.querySelectorAll('[placeholder="Сумма"]');
+    appData.setListenerName(nameFields);
+    appData.setListenerSum(sumFields);
     if (incomeItems.length === 3) {
       incomePlus.style.display = 'none';
     }
@@ -113,6 +128,7 @@ let appData = {
     });
   },
   getAddExpenses: function () {  
+    appData.addExpenses = [];
     let addExpenses = additionalExpensesItem.value.split(',');
     addExpenses.forEach(function (item) { 
       if (item !== '') {
@@ -121,7 +137,8 @@ let appData = {
       }
     });
   },
-  getAddIncome: function () {  
+  getAddIncome: function () {
+    appData.addIncome = [];
     additionalIncomeItem.forEach(function (item) { 
       let itemValue = item.value.trim();
       if (item.value !== '') {
@@ -130,12 +147,14 @@ let appData = {
     });
   },
   getExpensesMonth: function () { 
+    appData.expensesMonth = 0;
     for (const key in appData.expenses) {
       appData.expensesMonth += +appData.expenses[key];
     }
     return appData.expensesMonth;
   },
   getIncomeMonth: function () {  
+    appData.incomeMonth = 0;
     for (const key in appData.income) {
       appData.incomeMonth += +appData.income[key];
     }
@@ -189,6 +208,25 @@ let appData = {
     periodAmount.innerHTML = e.target.value;
     incomePeriodValue.value = Math.ceil(appData.calcPeriod());
   },
+  checkInputName: function (e) {  
+    let punctRE = /[\u2000-\u206F\u2E00-\u2E7F\\'!"#$%&()*+,\-.\/:;<=>?@\[\]^_`{|}~]/g;
+    let spaceRE = /\s+/g;
+    let numbersRE = /\d/g;
+    e.target.value = e.target.value.replace( /[A-z]/gi, '' ).replace(numbersRE, ''); 
+  },
+  checkInputSum: function (e) {  
+    e.target.value = e.target.value.replace(/[^0-9]/g, '');
+  },
+  setListenerName: function (object) {  
+    object.forEach(function (item) {
+      item.addEventListener('input', appData.checkInputName);
+    });
+  },
+  setListenerSum: function (object) {  
+    object.forEach(function (item) {
+      item.addEventListener('input', appData.checkInputSum);
+    });
+  },
 };
 
 
@@ -196,5 +234,7 @@ start.addEventListener('click', appData.start);
 expensesPlus.addEventListener('click', appData.addExpensesBlock);
 incomePlus.addEventListener('click', appData.addIncomeBlock);
 periodSelect.addEventListener('input', appData.getPeriodValue);
+appData.setListenerName(nameFields);
+appData.setListenerSum(sumFields);
 //appData.getStatusIncome();
 //appData.capitalizeAddExpensesString();
