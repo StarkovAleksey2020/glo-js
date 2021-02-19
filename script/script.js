@@ -61,6 +61,9 @@ class AppData {
     this.budgetDay = 0;
     this.budgetMonth = 0;
     this.expensesMonth = 0;
+    this.cookieYear = new Date().getFullYear();
+    this.cookieMonth = new Date().getMonth() + 1;
+    this.cookieDay = new Date().getDay();
   }
   start() {
     if (parseInt(salaryAmount.value) > 0) {
@@ -73,6 +76,7 @@ class AppData {
       this.getInfoDeposit();
       this.getBudget();
       this.showResult();
+      this.saveResult();
     }
   }
   blockInputs() {
@@ -98,6 +102,7 @@ class AppData {
     typeTextFields.forEach(item => {
       item.readOnly = false;
     });
+    this.clearStorages();
     this.reduceAddIncomeBlock();
     this.reduceAddExpensesBlock();
     this.clearScreenElements();
@@ -179,6 +184,86 @@ class AppData {
     additionalIncomeValue.value = this.addIncome.join(', ');
     targetMonthValue.value = !isNaN(this.getTargetMonth()) ? Math.ceil(this.getTargetMonth()) : '-';
     incomePeriodValue.value = Math.ceil(this.calcPeriod());
+  }
+  setCookie(name, value, expYear, expMonth, expDay, secure) {
+    let cookieString = name + '=' + encodeURI(value);
+    if (expYear && expMonth && expDay) {
+      let expDate = new Date(expYear, expMonth, expDay);
+      cookieString += '; expires=' + expDate.toGMTString();
+    } else {
+      cookieString += '; Path=/; Expires=Thu, 01 Jan 1970 00:00:01 GMT;';
+    }
+    cookieString += secure ? '; secure' : '';
+    document.cookie = cookieString;
+  }
+  getCookie(name) {
+    let matches = document.cookie.match(new RegExp("(?:^|; )" + name.replace(/([\.$?*|{}\(\)\[\]\\\/\+^])/g, '\\$1') + "=([^;]*)"));
+    return matches ? decodeURIComponent(matches[1]) : undefined;
+  }
+  saveResult() {
+    localStorage.setItem('budgetMonth', this.budgetMonth);
+    localStorage.setItem('budgetDay', Math.ceil(this.budgetDay));
+    localStorage.setItem('expensesMonth', this.expensesMonth);
+    localStorage.setItem('addExpenses', this.addExpenses.join(', '));
+    localStorage.setItem('addIncome', this.addIncome.join(', '));
+    localStorage.setItem('targetMonth', !isNaN(this.getTargetMonth()) ? Math.ceil(this.getTargetMonth()) : '-');
+    localStorage.setItem('period', Math.ceil(this.calcPeriod()));
+
+    this.setCookie('budgetMonth', this.budgetMonth, this.cookieYear, this.cookieMonth, this.cookieDay, true);
+    this.setCookie('budgetDay', Math.ceil(this.budgetDay), this.cookieYear, this.cookieMonth, this.cookieDay, true);
+    this.setCookie('expensesMonth', this.expensesMonth, this.cookieYear, this.cookieMonth, this.cookieDay, true);
+    this.setCookie('addExpenses', this.addExpenses.join(', '), this.cookieYear, this.cookieMonth, this.cookieDay, true);
+    this.setCookie('addIncome', this.addIncome.join(', '), this.cookieYear, this.cookieMonth, this.cookieDay, true);
+    this.setCookie('targetMonth', !isNaN(this.getTargetMonth()) ? Math.ceil(this.getTargetMonth()) : '-', this.cookieYear, this.cookieMonth, this.cookieDay, true);
+    this.setCookie('period', Math.ceil(this.calcPeriod()), this.cookieYear, this.cookieMonth, this.cookieDay, true);
+    this.setCookie('isLoad', true, this.cookieYear, this.cookieMonth, this.cookieDay, true);
+  }
+  restoreResult() {
+    let isLoad = true;
+
+    // сверяем cookie & localStorage
+    if (this.getCookie('budgetMonth') !== localStorage.getItem('budgetMonth')) { isLoad = false; }
+    if (this.getCookie('budgetDay') !== localStorage.getItem('budgetDay')) { isLoad = false; }
+    if (this.getCookie('expensesMonth') !== localStorage.getItem('expensesMonth')) { isLoad = false; }
+    if (this.getCookie('addExpenses') !== localStorage.getItem('addExpenses')) { isLoad = false; }
+    if (this.getCookie('addIncome') !== localStorage.getItem('addIncome')) { isLoad = false; }
+    if (this.getCookie('targetMonth') !== localStorage.getItem('targetMonth')) { isLoad = false; }
+    if (this.getCookie('period') !== localStorage.getItem('period')) { isLoad = false; }
+
+    // если сходится - прорисовываем экранные элементы из localStorage, иначе - чистим хранилища и форму
+    if (isLoad === true) {
+      budgetMonthValue.value = (localStorage.getItem('budgetMonth'));
+      budgetDayValue.value = (localStorage.getItem('budgetDay'));
+      expensesMonthValue.value = (localStorage.getItem('expensesMonth'));
+      additionalExpensesValue.value = (localStorage.getItem('addExpenses'));
+      additionalIncomeValue.value = (localStorage.getItem('addIncome'));
+      targetMonthValue.value = (localStorage.getItem('targetMonth'));
+      incomePeriodValue.value = (localStorage.getItem('period'));
+    } else {
+      this.clearStorages();
+      this.clearVariables();
+      this.showResult();
+      this.toggleButtonToStart();
+    }
+  }
+  clearStorages() {
+    if (localStorage.getItem('budgetMonth')) { localStorage.removeItem('budgetMonth'); }
+    if (localStorage.getItem('budgetDay')) { localStorage.removeItem('budgetDay'); }
+    if (localStorage.getItem('expensesMonth')) { localStorage.removeItem('expensesMonth'); }
+    if (localStorage.getItem('addExpenses')) { localStorage.removeItem('addExpenses'); }
+    if (localStorage.getItem('addIncome')) { localStorage.removeItem('addIncome'); }
+    if (localStorage.getItem('targetMonth')) { localStorage.removeItem('targetMonth'); }
+    if (localStorage.getItem('period')) { localStorage.removeItem('period'); }
+
+    if (this.getCookie('budgetMonth')) { this.setCookie('budgetMonth'); }
+    if (this.getCookie('budgetDay')) { this.setCookie('budgetDay'); }
+    if (this.getCookie('expensesMonth')) { this.setCookie('expensesMonth'); }
+    if (this.getCookie('addExpenses')) { this.setCookie('addExpenses'); }
+    if (this.getCookie('addIncome')) { this.setCookie('addIncome'); }
+    if (this.getCookie('targetMonth')) { this.setCookie('targetMonth'); }
+    if (this.getCookie('period')) { this.setCookie('period'); }
+
+    this.setCookie('isLoad', false, this.cookieYear, this.cookieMonth, this.cookieDay, true);
   }
   addExpInc(value) {
     const arrayName = [value][0][0].toLowerCase() + 'Items';
@@ -372,6 +457,7 @@ class AppData {
 }
 
 const appData = new AppData();
+appData.restoreResult();
 appData.eventsListeners();
 
 
